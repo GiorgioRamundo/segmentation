@@ -1,3 +1,4 @@
+import collections
 import sys
 
 import numpy
@@ -14,6 +15,7 @@ def preprocess(_w):
     tokenizer = RegexpTokenizer(r"\w+")
     tokens = tokenizer.tokenize(listToString(tokens))
     stop_words = set(stopwords.words('english'))
+    stop_words.add('The')
     lemmatizer = WordNetLemmatizer()
     t = [lemmatizer.lemmatize(w) for w in tokens if not w in stop_words]
     return listToString(t)
@@ -50,27 +52,62 @@ def read_file():
 def initialize(frequences, d):
     for w in d:
         frequences[w] = 0
+        
+
+def conta(w,l):
+    f = 0
+    for _w in word_tokenize(l):
+        if w == _w:
+            f = f + 1
+    return f
 
 
-doc = read_file()
-d = dictionary(preprocess(doc))
+
+
+
+_doc = read_file()
+doc = preprocess(_doc)
+d = dictionary(doc)
 print(d)
 print('found ' + str(len(d)) + ' words')
 frequences = []
 #_doc = word_tokenize(doc)
-_doc = doc.split("\n")
-print('file is ' + str(len(doc)) + ' words long')
-#initialize(frequences, d)
-matrix = np.zeros((len(d),len(_doc)))
-for r in range(len(matrix)):
-    for c in range(len(matrix[r])):
-        if (d[r] == _doc[c]):
-            matrix[r][c] = 1
-#print(matrix)
-granularity = 50
-matrix2 = np.zeros((len(d),int(len(_doc)/granularity)))
-for r in range(len(matrix2)):
-    for c in range(len(matrix2[r])):
-        for i in range(granularity):
-            matrix2[r][c] += matrix[r][i]
-print(matrix2)
+doc_lines = _doc.split("\n")
+lines = len(doc_lines)
+print('file is ' + str(lines) + ' lines long')
+frequences = {}
+max_length = max([len(w) for w in d])
+for i in range(lines):
+    for w in d:
+        frequences[(w,i)] = conta(w,doc_lines[i])
+print(frequences)
+
+for j in range(max_length):
+    print(' ',end='')
+
+# for l in range(lines):
+#     print('{}\t'.format(str(l)),end='')
+# print()
+# for w in d:
+#     print(w,end='')
+#     for j in range(max_length-len(w)):
+#         print(' ',end='')
+#     for l in range(lines):
+#         print('{}\t'.format(str(frequences[(w,l)])),end='')
+#     print()
+
+g = 3
+for l in range(round(lines/g)):
+    print('{}\t'.format(str(l)),end='')
+print()
+for w in d:
+    printed = ""
+    print(w,end='')
+    for j in range(max_length-len(w)):
+        print(' ',end='')
+    for l in range(round(lines/g)):
+        somma = 0
+        for _l in range(l,l+g):
+            somma += frequences[(w,_l)]
+        printed += str(somma) + '\t'
+    print('{}\t'.format(printed,end=''))
